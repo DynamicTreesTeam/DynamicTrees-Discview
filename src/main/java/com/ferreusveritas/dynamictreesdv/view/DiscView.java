@@ -1,32 +1,101 @@
 package com.ferreusveritas.dynamictreesdv.view;
 
+import java.awt.Checkbox;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Graphics2D;
+import java.awt.LayoutManager;
+import java.awt.TextField;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.border.BevelBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class DiscView implements Runnable {
 	
 	public Thread viewerThread;
 	private final AtomicBoolean running = new AtomicBoolean(false);
-	public JPanel panel;
+	
 	public JFrame window;
-	public BufferedImage canvas;
-	public Graphics2D graphics;
-	public int t = 0;
+	public ViewerGrid grid;
+	
+	private int targetTickMillis;
 	
 	public DiscView() {
-		panel = new JPanel(true);
-		panel.setPreferredSize(new Dimension(512, 512));
-		panel.setBackground(new Color(255, 255, 255));
-		window = new JFrame("Poisson Disc Viewer");
-		window.setContentPane(panel);
+		window = new JFrame("Disc Viewer?");
+		grid = new ViewerGrid();
+		JPanel container = new JPanel();
+		JPanel menu = new JPanel();
+		JPanel gridPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+		
+		gridPanel.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
+		menu.setBorder(BorderFactory.createEtchedBorder());
+		menu.setLayout(new BoxLayout(menu, BoxLayout.Y_AXIS));
+		container.add(menu, 0);
+		container.add(gridPanel, 1);
+		gridPanel.add(grid);
+		menu.setAlignmentY(0.5F);
+		gridPanel.setAlignmentY(0.5F);
+		
+		JButton clearButton = new JButton("Clear Grid");
+	    clearButton.addActionListener(new ActionListener() {
+	      public void actionPerformed(ActionEvent e) {
+	        grid.clear();
+	      }
+	    });
+	    JSlider speedSlider = new JSlider(10, 30, 20);
+	    speedSlider.setBorder(BorderFactory.createTitledBorder("Game Speed"));
+	    speedSlider.setInverted(true);
+	    speedSlider.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				JSlider source = (JSlider) e.getSource();
+				if (!source.getValueIsAdjusting()) {
+					targetTickMillis = (int) Math.pow(10.0D, source.getValue() / 10.0D);
+				}
+			}
+	    });
+	    targetTickMillis = (int) Math.pow(10.0D, speedSlider.getValue() / 10.0D);
+	    Checkbox toggleActive = new Checkbox("Active", false);
+	    toggleActive.addItemListener(new ItemListener() {
+            public void itemStateChanged(ItemEvent e) {
+            	boolean active = e.getStateChange() == ItemEvent.SELECTED;
+            	grid.setActive(active);
+            }
+	    });
+	    JPanel rulesPanel = new JPanel();
+	    rulesPanel.setBorder(BorderFactory.createTitledBorder("Rules: (S/B)"));
+	    TextField rulesInput = new TextField("23/3", 19);
+	    rulesInput.addActionListener(new ActionListener() {
+	      public void actionPerformed(ActionEvent e) {
+	        grid.parseRules(rulesInput.getText());
+	      }
+	    });
+	    rulesPanel.add(rulesInput);
+	    
+	    menu.add(toggleActive);
+	    menu.add(rulesPanel);
+		menu.add(speedSlider);
+		menu.add(clearButton);
+		menu.add(Box.createRigidArea(new Dimension(1, 335)));
+		
+		window.setContentPane(container);
 		window.pack();
 		window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		window.setLocationRelativeTo(null);
@@ -41,39 +110,36 @@ public class DiscView implements Runnable {
 		    }
 		});
 		
-		canvas = new BufferedImage(128, 128, BufferedImage.TYPE_INT_ARGB);
-		graphics = (Graphics2D) panel.getGraphics();
-		
 		viewerThread = new Thread(this);
 		viewerThread.start();
-	}
-	
-	public void draw() {
-		//g.clearRect(0, 0, panel.getWidth(), panel.getHeight());
-		for (int y = 0; y < canvas.getHeight(); y++) {
-			for (int x = 0; x < canvas.getWidth(); x++) {
-				if (y < (t % canvas.getHeight()) && x < (t % canvas.getWidth())) {
-					canvas.setRGB(x, y, 0xFF000000);
-				} else {
-					canvas.setRGB(x, y, 0xFFFFFFFF);
-				}
-			}
-		}
-		t++;
-		graphics.drawImage(canvas, 0, 0, panel.getWidth(), panel.getHeight(), null);
 	}
 
 	@Override
 	public void run() {
 		running.set(true);
+		
+		int renderTickMillis = 1000 / 60;
+		
+		int prevTime = (int) System.currentTimeMillis();
+		int drawAccumulator = 0;
+	    int tickAccumulator = 0;
+	    
 		while (running.get()) {
-			draw();
+			int time = (int) System.currentTimeMillis();
+			int delta = time - prevTime;
+			prevTime = time;
+			tickAccumulator += delta;
+			drawAccumulator += delta;
 			
-			try {
-				Thread.sleep(500L);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				Thread.currentThread().interrupt();
+			grid.doInput();
+			
+			if (tickAccumulator >= targetTickMillis) {
+				tickAccumulator = Math.min(tickAccumulator - targetTickMillis, targetTickMillis);
+				grid.update();
+			}
+			if (drawAccumulator >= renderTickMillis) {
+				drawAccumulator -= renderTickMillis;
+				grid.draw();
 			}
 		}
 	}
