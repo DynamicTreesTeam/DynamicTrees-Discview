@@ -12,7 +12,7 @@ import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
 import com.ferreusveritas.dynamictrees.ModConstants;
-import com.ferreusveritas.dynamictrees.util.PoissonDisc;
+import com.ferreusveritas.dynamictrees.systems.poissondisc.PoissonDisc;
 
 import net.minecraft.world.gen.NoiseGeneratorPerlin;
 
