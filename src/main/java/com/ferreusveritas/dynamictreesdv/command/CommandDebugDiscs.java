@@ -3,9 +3,13 @@ package com.ferreusveritas.dynamictreesdv.command;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.ferreusveritas.dynamictreesdv.DynamicTreesDV;
+import com.ferreusveritas.dynamictreesdv.packets.PacketOpenGui;
+
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommand;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 
@@ -33,8 +37,9 @@ public class CommandDebugDiscs implements ICommand {
 	
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-		System.out.println("I'm running a thing");
-		// TODO Auto-generated method stub
+		System.out.println("I'm sending a packet to the command sender");
+		PacketOpenGui packet = new PacketOpenGui();
+		DynamicTreesDV.network.sendTo(packet, (EntityPlayerMP) sender.getCommandSenderEntity());
 	}
 	
 	@Override
