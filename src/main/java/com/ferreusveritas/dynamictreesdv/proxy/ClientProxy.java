@@ -1,5 +1,7 @@
 package com.ferreusveritas.dynamictreesdv.proxy;
 
+import com.ferreusveritas.dynamictreesdv.view.DiscView;
+
 public class ClientProxy extends CommonProxy {
 	
 	@Override
@@ -14,7 +16,7 @@ public class ClientProxy extends CommonProxy {
 
 	@Override
 	public void postInit() {
-		// TODO Auto-generated method stub
+		new DiscView();
 	}
 
 	
