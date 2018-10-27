@@ -1,20 +1,12 @@
 package com.ferreusveritas.dynamictreesdv.view;
 
-import java.awt.Checkbox;
-import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.awt.Graphics2D;
-import java.awt.LayoutManager;
 import java.awt.TextField;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.BorderFactory;
@@ -54,10 +46,16 @@ public class DiscView implements Runnable {
 		menu.setAlignmentY(0.5F);
 		gridPanel.setAlignmentY(0.5F);
 		
-		JButton clearButton = new JButton("Clear Grid");
+		JButton clearButton = new JButton("Clear");
 	    clearButton.addActionListener(new ActionListener() {
 	      public void actionPerformed(ActionEvent e) {
 	        grid.clear();
+	      }
+	    });
+		JButton generateButton = new JButton("Generate");
+	    generateButton.addActionListener(new ActionListener() {
+	      public void actionPerformed(ActionEvent e) {
+	        grid.generate();
 	      }
 	    });
 	    JSlider speedSlider = new JSlider(10, 30, 20);
@@ -72,27 +70,21 @@ public class DiscView implements Runnable {
 			}
 	    });
 	    targetTickMillis = (int) Math.pow(10.0D, speedSlider.getValue() / 10.0D);
-	    Checkbox toggleActive = new Checkbox("Active", false);
-	    toggleActive.addItemListener(new ItemListener() {
-            public void itemStateChanged(ItemEvent e) {
-            	boolean active = e.getStateChange() == ItemEvent.SELECTED;
-            	grid.setActive(active);
-            }
-	    });
-	    JPanel rulesPanel = new JPanel();
-	    rulesPanel.setBorder(BorderFactory.createTitledBorder("Rules: (S/B)"));
-	    TextField rulesInput = new TextField("23/3", 19);
-	    rulesInput.addActionListener(new ActionListener() {
+
+	    JPanel seedPanel = new JPanel();
+	    seedPanel.setBorder(BorderFactory.createTitledBorder("Random Seed:"));
+	    TextField seedInput = new TextField("", 19);
+	    seedInput.addActionListener(new ActionListener() {
 	      public void actionPerformed(ActionEvent e) {
-	        grid.parseRules(rulesInput.getText());
+	        grid.setSeed(seedInput.getText());
 	      }
 	    });
-	    rulesPanel.add(rulesInput);
+	    seedPanel.add(seedInput);
 	    
-	    menu.add(toggleActive);
-	    menu.add(rulesPanel);
+	    menu.add(seedPanel);
 		menu.add(speedSlider);
 		menu.add(clearButton);
+		menu.add(generateButton);
 		menu.add(Box.createRigidArea(new Dimension(1, 335)));
 		
 		window.setContentPane(container);

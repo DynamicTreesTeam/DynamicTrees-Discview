@@ -3,19 +3,24 @@ package com.ferreusveritas.dynamictreesdv.view;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import javax.swing.JPanel;
 
+import com.ferreusveritas.dynamictrees.systems.poissondisc.PoissonDisc;
+import com.ferreusveritas.dynamictrees.systems.poissondisc.PoissonDiscProvider;
+import com.ferreusveritas.dynamictreesdv.RadiusCoordinator;
+
 public class ViewerGrid extends JPanel {
 
+	private static final long serialVersionUID = 6672294391228363761L;
 	private Cursor crosshair = new Cursor(Cursor.CROSSHAIR_CURSOR);
 	private Cursor pointer = new Cursor(Cursor.DEFAULT_CURSOR);
 	
@@ -23,34 +28,29 @@ public class ViewerGrid extends JPanel {
 	private int gridWidth, gridHeight;
 	private int tileWidth, tileHeight;
 	private boolean[][] current;
-	private boolean[][] next;
-	private ArrayList<Integer> born = new ArrayList();
-	private ArrayList<Integer> lives = new ArrayList();
-	private boolean active;
 	private boolean leftMousePressed, rightMousePressed;
 	public boolean gridChanged = true;
 	private BufferedImage canvas;
+	Long seed = null;
 
+	private PoissonDiscProvider discProvider;
+	
 	public ViewerGrid() {
 		super(true);
-		this.width = 500;
-		this.height = 500;
-		this.gridWidth = 100;
-		this.gridHeight = 100;
+		this.width = 512;
+		this.height = 512;
+		this.gridWidth = 128;
+		this.gridHeight = 128;
 		this.tileWidth = width / gridWidth;
 		this.tileHeight = height / gridHeight;
 		this.current = new boolean[gridHeight][gridWidth];
-		this.next = new boolean[gridHeight][gridWidth];
-		this.born.add(3);
-		this.lives.add(2);
-		this.lives.add(3);
 		setPreferredSize(new Dimension(width, height));
 		setSize(new Dimension(width, height));
 		setBackground(new Color(220, 220, 220));
 		canvas = new BufferedImage(gridWidth, gridHeight, BufferedImage.TYPE_INT_ARGB);
-		setActive(false);
 		this.leftMousePressed = false;
 		this.rightMousePressed = false;
+		this.setCursor(pointer);
 		this.addMouseListener(new MouseAdapter() {
 			public void mousePressed(MouseEvent e) {
 				if (e.getButton() == 1)
@@ -66,25 +66,31 @@ public class ViewerGrid extends JPanel {
 					ViewerGrid.this.rightMousePressed = false;
 			}
 		});
+	
+		clear();
 	}
+	
+	private int bgColor(int x, int z) {
+		boolean chunkLight = (((x / 16) + (z / 16)) & 1) == 1;
+		boolean blockLight = ((x + z) & 1) == 1;
+		
+		//Draw virtual chunks
+		int lightGrey = new Color(186, 189, 182).getRGB();
+		int darkGrey = new Color(136, 138, 133).getRGB();
 
-	public void clear() {
-		for (int y = 0; y < this.gridHeight; y++) {
-			for (int x = 0; x < this.gridWidth; x++) {
-				this.current[y][x] = false;
-				this.next[y][x] = false;
-			}
-		}
-		gridChanged = true;
+		int lightGreen = new Color(186, 189, 112).getRGB();
+		int darkGreen = new Color(136, 138, 80).getRGB();
+		
+		return chunkLight ? ( blockLight ? lightGrey : darkGrey) : ( blockLight ? lightGreen : darkGreen);
 	}
-
+	
 	public void draw() {
 		if (!gridChanged) return;
 		
 		Graphics2D g = (Graphics2D) getGraphics();
 		for (int y = 0; y < gridHeight; y++) {
 			for (int x = 0; x < gridWidth; x++) {
-				canvas.setRGB(x, y, current[y][x] ? 0xFF000000 : 0xFFDCDCDC);
+				canvas.setRGB(x, y, current[y][x] ? 0xFF000000 : bgColor(x, y));
 			}
 		}
 		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
@@ -92,9 +98,9 @@ public class ViewerGrid extends JPanel {
 		
 		gridChanged = false;
 	}
-
+	
 	public void doInput() {
-		if (!active && (rightMousePressed != leftMousePressed)) {
+		if (rightMousePressed != leftMousePressed) {
 			boolean newState = leftMousePressed;
 			Point pos = getMousePosition();
 			if ((pos != null) && (pos.getX() >= 0.0D) && (pos.getY() >= 0.0D)) {
@@ -109,79 +115,83 @@ public class ViewerGrid extends JPanel {
 			}
 		}
 	}
-
-	public void parseRules(String nums) {
-		try {
-			lives.clear();
-			born.clear();
-			int index = 0;
-			for (int i = 1; i < nums.length() + 1; i++) {
-				if (nums.substring(i - 1, i).equals("/")) {
-					index = i + 1;
-					break;
-				}
-				lives.add(Integer.parseInt(nums.substring(i - 1, i)));
-			}
-			for (int i = index; i < nums.length() + 1; i++) {
-				born.add(Integer.parseInt(nums.substring(i - 1, i)));
-			}
-		} catch (NumberFormatException e) {
+	
+	public boolean getBlock(int x, int z, boolean block) {
+		if(x >= 0 && z >= 0 && x < gridWidth && z < gridHeight) {
+			return current[z][x];
+		}
+		return false;
+	}
+	
+	public void setBlock(int x, int z, boolean block) {
+		if(x >= 0 && z >= 0 && x < gridWidth && z < gridHeight) {
+			current[z][x] = block;
 		}
 	}
-
-	public void setActive(boolean active) {
-		this.active = active;
-		this.setCursor(active ? pointer : crosshair);
-	}
-
-	public void update() {
-		if (!active) return;
-		
-		for (int y = 0; y < gridHeight; y++) {
-			for (int x = 0; x < gridWidth; x++) {
-				int neighbors = 0;
-				for (int nY = -1; nY <= 1; nY++) {
-					for (int nX = -1; nX <= 1; nX++) {
-						if (nX == 0 && nY == 0) continue;
-						if (current[wrap(y + nY, gridHeight)][wrap(x + nX, gridWidth)]) neighbors++;
-					}
-				}
-
-				if (!current[y][x] && canBirth(neighbors)) next[y][x] = true;
-				else if (current[y][x] && canLive(neighbors)) next[y][x] = true;
-				else next[y][x] = false;
-			}
+	
+	public void setBlockOr(int x, int z, boolean block) {
+		if(x >= 0 && z >= 0 && x < gridWidth && z < gridHeight) {
+			current[z][x] |= block;
 		}
+	}
+	
+	public void clear() {
+		discProvider = new PoissonDiscProvider(new RadiusCoordinator(new Random()));
+		discProvider.setSeed(seed);
 		
 		for (int y = 0; y < this.gridHeight; y++) {
 			for (int x = 0; x < this.gridWidth; x++) {
-				current[y][x] = next[y][x];
-				next[y][x] = false;
+				this.current[y][x] = false;
+			}
+		}
+		gridChanged = true;
+	}
+	
+	public void update() {
+		//Do nothing for now
+	}
+	
+	public void generate() {
+		clear();
+		
+		for(int cz = 0; cz < 8; cz++) {
+			for(int cx = 0; cx < 8; cx++) { 
+				List<PoissonDisc> discs = discProvider.getPoissonDiscs(cx, 0, cz);
+				
+				for(PoissonDisc d : discs) {
+					int startX = d.x - d.radius;
+					int stopX = d.x + d.radius;
+					int startZ = d.z - d.radius;
+					int stopZ = d.z + d.radius;
+					
+					for(int z = startZ; z <= stopZ; z++) {
+						for(int x = startX; x <= stopX; x++) {
+							setBlockOr(x, z, d.isEdge(x, z));
+						}
+					}
+					
+				}
+				
 			}
 		}
 		
 		gridChanged = true;
 	}
-
+	
 	public int getGridWidth() {
 		return this.gridWidth;
 	}
-
+	
 	public int getGridHeight() {
 		return this.gridHeight;
 	}
-
-	public boolean canLive(int num) {
-		return lives.contains(num);
+	
+	public void setSeed(String text) {
+		try {
+			seed = Long.parseLong(text);
+		} catch (NumberFormatException e) {
+			seed = null;
+		}
 	}
-
-	public boolean canBirth(int num) {
-		return born.contains(num);
-	}
-
-	public int wrap(int num, int max) {
-		if (num >= max) return 0;
-		if (num <= -1) return max - 1;
-		return num;
-	}
+	
 }
