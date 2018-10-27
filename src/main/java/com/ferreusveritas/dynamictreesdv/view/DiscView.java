@@ -47,44 +47,77 @@ public class DiscView implements Runnable {
 		gridPanel.setAlignmentY(0.5F);
 		
 		JButton clearButton = new JButton("Clear");
-	    clearButton.addActionListener(new ActionListener() {
-	      public void actionPerformed(ActionEvent e) {
-	        grid.clear();
-	      }
-	    });
+		clearButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				grid.clear();
+			}
+		});
 		JButton generateButton = new JButton("Generate");
-	    generateButton.addActionListener(new ActionListener() {
-	      public void actionPerformed(ActionEvent e) {
-	        grid.generate();
-	      }
-	    });
-	    JSlider speedSlider = new JSlider(10, 30, 20);
-	    speedSlider.setBorder(BorderFactory.createTitledBorder("Game Speed"));
-	    speedSlider.setInverted(true);
-	    speedSlider.addChangeListener(new ChangeListener() {
+		generateButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				grid.generate();
+			}
+		});
+		
+		JButton startButton = new JButton("Start Thread");
+		startButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				grid.startThread();
+			}
+		});
+		JButton pauseButton = new JButton("Pause Thread");
+		pauseButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				grid.pauseThread();
+			}
+		});
+		JButton resumeButton = new JButton("Resume Thread");
+		resumeButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				grid.resumeThread();
+			}
+		});
+		JButton stopButton = new JButton("Stop Thread");
+		stopButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				grid.stopThread();
+			}
+		});
+		
+		
+		JSlider speedSlider = new JSlider(10, 30, 20);
+		speedSlider.setBorder(BorderFactory.createTitledBorder("Game Speed"));
+		speedSlider.setInverted(true);
+		speedSlider.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 				JSlider source = (JSlider) e.getSource();
 				if (!source.getValueIsAdjusting()) {
 					targetTickMillis = (int) Math.pow(10.0D, source.getValue() / 10.0D);
 				}
 			}
-	    });
-	    targetTickMillis = (int) Math.pow(10.0D, speedSlider.getValue() / 10.0D);
-
-	    JPanel seedPanel = new JPanel();
-	    seedPanel.setBorder(BorderFactory.createTitledBorder("Random Seed:"));
-	    TextField seedInput = new TextField("", 19);
-	    seedInput.addActionListener(new ActionListener() {
-	      public void actionPerformed(ActionEvent e) {
-	        grid.setSeed(seedInput.getText());
-	      }
-	    });
-	    seedPanel.add(seedInput);
-	    
-	    menu.add(seedPanel);
+		});
+		targetTickMillis = (int) Math.pow(10.0D, speedSlider.getValue() / 10.0D);
+		
+		JPanel seedPanel = new JPanel();
+		seedPanel.setBorder(BorderFactory.createTitledBorder("Random Seed:"));
+		TextField seedInput = new TextField("", 19);
+		seedInput.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				grid.setSeed(seedInput.getText());
+			}
+		});
+		seedPanel.add(seedInput);
+		
+		menu.add(seedPanel);
 		menu.add(speedSlider);
 		menu.add(clearButton);
 		menu.add(generateButton);
+		
+		menu.add(startButton);
+		menu.add(pauseButton);
+		menu.add(resumeButton);
+		menu.add(stopButton);
+		
 		menu.add(Box.createRigidArea(new Dimension(1, 335)));
 		
 		window.setContentPane(container);
@@ -95,17 +128,17 @@ public class DiscView implements Runnable {
 		window.pack();
 		window.setResizable(false);
 		window.addWindowListener(new WindowAdapter() {
-		    @Override
-		    public void windowClosing(WindowEvent e) {
-		    	System.out.println("Closing Viewer");
-		    	stop();
-		    }
+			@Override
+			public void windowClosing(WindowEvent e) {
+				System.out.println("Closing Viewer");
+				stop();
+			}
 		});
 		
 		viewerThread = new Thread(this);
 		viewerThread.start();
 	}
-
+	
 	@Override
 	public void run() {
 		running.set(true);
@@ -114,8 +147,8 @@ public class DiscView implements Runnable {
 		
 		int prevTime = (int) System.currentTimeMillis();
 		int drawAccumulator = 0;
-	    int tickAccumulator = 0;
-	    
+		int tickAccumulator = 0;
+		
 		while (running.get()) {
 			int time = (int) System.currentTimeMillis();
 			int delta = time - prevTime;
@@ -137,7 +170,8 @@ public class DiscView implements Runnable {
 	}
 	
 	public void stop() {
-        running.set(false);
-    }
-
+		running.set(false);
+		grid.stopThread();
+	}
+	
 }
