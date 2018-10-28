@@ -46,6 +46,19 @@ public class DiscView implements Runnable {
 		menu.setAlignmentY(0.5F);
 		gridPanel.setAlignmentY(0.5F);
 		
+		JButton startButton = new JButton("Start Generator Thread");
+		startButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				grid.startThread();
+			}
+		});
+		JButton stopButton = new JButton("Stop Generator Thread");
+		stopButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				grid.stopThread();
+			}
+		});
+		
 		JButton clearButton = new JButton("Clear");
 		clearButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -58,29 +71,10 @@ public class DiscView implements Runnable {
 				grid.generate();
 			}
 		});
-		
-		JButton startButton = new JButton("Start Thread");
-		startButton.addActionListener(new ActionListener() {
+		JButton stepButton = new JButton("Step");
+		stepButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				grid.startThread();
-			}
-		});
-		JButton pauseButton = new JButton("Pause Thread");
-		pauseButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				grid.pauseThread();
-			}
-		});
-		JButton resumeButton = new JButton("Resume Thread");
-		resumeButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				grid.resumeThread();
-			}
-		});
-		JButton stopButton = new JButton("Stop Thread");
-		stopButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				grid.stopThread();
+				grid.step();
 			}
 		});
 		
@@ -110,13 +104,14 @@ public class DiscView implements Runnable {
 		
 		menu.add(seedPanel);
 		menu.add(speedSlider);
+
+		menu.add(startButton);
+		menu.add(stopButton);
+		
 		menu.add(clearButton);
 		menu.add(generateButton);
+		menu.add(stepButton);
 		
-		menu.add(startButton);
-		menu.add(pauseButton);
-		menu.add(resumeButton);
-		menu.add(stopButton);
 		
 		menu.add(Box.createRigidArea(new Dimension(1, 335)));
 		

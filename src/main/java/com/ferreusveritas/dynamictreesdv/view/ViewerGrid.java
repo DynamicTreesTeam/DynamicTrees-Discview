@@ -9,11 +9,8 @@ import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.util.List;
 
 import javax.swing.JPanel;
-
-import com.ferreusveritas.dynamictrees.systems.poissondisc.PoissonDisc;
 
 public class ViewerGrid extends JPanel {
 	
@@ -58,7 +55,7 @@ public class ViewerGrid extends JPanel {
 					ViewerGrid.this.rightMousePressed = false;
 			}
 		});
-	
+		
 		clear();
 	}
 	
@@ -69,7 +66,7 @@ public class ViewerGrid extends JPanel {
 		//Draw virtual chunks
 		int lightGrey = new Color(186, 189, 182).getRGB();
 		int darkGrey = new Color(136, 138, 133).getRGB();
-
+		
 		int lightGreen = new Color(186, 189, 112).getRGB();
 		int darkGreen = new Color(136, 138, 80).getRGB();
 		
@@ -106,15 +103,13 @@ public class ViewerGrid extends JPanel {
 	}
 	
 	public void clear() {
+		if(generator != null) {
+			generator.stop();
+		}
+		System.out.println("clear");
 		generator = new Generator(grid);
 		generator.setSeed(seed);
-		
-		for (int y = 0; y < this.grid.getHeight(); y++) {
-			for (int x = 0; x < this.grid.getWidth(); x++) {
-				grid.setBlock(x, y, false);
-			}
-		}
-		
+		grid.clear();
 	}
 	
 	public void update() {
@@ -122,31 +117,17 @@ public class ViewerGrid extends JPanel {
 	}
 	
 	public void generate() {
-		clear();
-		
-		for(int cz = 0; cz < 8; cz++) {
-			for(int cx = 0; cx < 8; cx++) { 
-				List<PoissonDisc> discs = generator.getPoissonDiscs(cx, 0, cz);
-				
-				for(PoissonDisc disc : discs) {
-					grid.drawDisc(disc);
-				}
-				
-			}
-		}
-		
+		System.out.println("generate");
+		//clear();
+		generator.startGeneration();
+	}
+	
+	public void step() {
+		generator.step();
 	}
 	
 	public void startThread() {
 		generator.start();
-	}
-	
-	public void pauseThread() {
-		generator.pause();
-	}
-	
-	public void resumeThread() {
-		generator.resume();
 	}
 	
 	public void stopThread() {

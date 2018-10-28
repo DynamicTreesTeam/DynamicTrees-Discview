@@ -30,6 +30,14 @@ public class Grid {
 		changed = false;
 	}
 	
+	public void clear() {
+		for (int y = 0; y < getHeight(); y++) {
+			for (int x = 0; x < getWidth(); x++) {
+				setBlock(x, y, false);
+			}
+		}
+	}
+	
 	public boolean getBlock(int x, int z) {
 		if(x >= 0 && z >= 0 && x < getWidth() && z < getHeight()) {
 			return current[z][x];
