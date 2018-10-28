@@ -74,18 +74,23 @@ public class ViewerGrid extends JPanel {
 	}
 	
 	public void draw() {
-		if (!grid.changed) return;
 		
-		Graphics2D g = (Graphics2D) getGraphics();
-		for (int y = 0; y < grid.getHeight(); y++) {
-			for (int x = 0; x < grid.getWidth(); x++) {
-				canvas.setRGB(x, y, grid.getBlock(x, y) ? 0xFF000000 : bgColor(x, y));
+		if (grid.isDirty()) {			
+			grid.clear();
+			grid.renderDrawables();
+			
+			Graphics2D g = (Graphics2D) getGraphics();
+			for (int y = 0; y < grid.getHeight(); y++) {
+				for (int x = 0; x < grid.getWidth(); x++) {
+					canvas.setRGB(x, y, grid.getBlock(x, y) ? 0xFF000000 : bgColor(x, y));
+				}
 			}
+			
+			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+			g.drawImage(canvas, 0, 0, width, height, null);
+			
+			grid.clean();
 		}
-		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-		g.drawImage(canvas, 0, 0, width, height, null);
-		
-		grid.clean();
 	}
 	
 	public void doInput() {
@@ -103,13 +108,15 @@ public class ViewerGrid extends JPanel {
 	}
 	
 	public void clear() {
+		System.out.println("clear");
 		if(generator != null) {
 			generator.stop();
 		}
-		System.out.println("clear");
 		generator = new Generator(grid);
 		generator.setSeed(seed);
+		generator.start();
 		grid.clear();
+		grid.clearDrawables();
 	}
 	
 	public void update() {
@@ -118,7 +125,6 @@ public class ViewerGrid extends JPanel {
 	
 	public void generate() {
 		System.out.println("generate");
-		//clear();
 		generator.startGeneration();
 	}
 	

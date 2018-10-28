@@ -11,7 +11,7 @@ import com.ferreusveritas.dynamictrees.systems.poissondisc.Vec2i;
 import com.ferreusveritas.dynamictreesdv.RadiusCoordinator;
 
 public class Generator implements Runnable, IPoissonDebug {
-	private volatile boolean running = true;
+	private volatile boolean running = false;
 	private PoissonDiscProvider provider;
 	private Grid grid;
 	
@@ -20,6 +20,7 @@ public class Generator implements Runnable, IPoissonDebug {
 	
 	private volatile boolean generate = false;
 	
+	private Thread current;
 	
 	public Generator(Grid grid) {
 		provider = new PoissonDiscProvider(new RadiusCoordinator(new Random()));
@@ -38,17 +39,7 @@ public class Generator implements Runnable, IPoissonDebug {
 	@Override
 	public void run () {
 		while (running){
-			
-			try {
-				Thread.sleep(200);
-			}
-			catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			
-			// Your code here
-			//System.out.println("running");
-			doSomething();
+			sleep(100);
 			generateDiscs();
 		}
 	}
@@ -64,6 +55,15 @@ public class Generator implements Runnable, IPoissonDebug {
 					}
 				}
 			}
+		}
+	}
+	
+	private void sleep(long millis) {
+		try {
+			Thread.sleep(millis);
+		}
+		catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -85,11 +85,6 @@ public class Generator implements Runnable, IPoissonDebug {
 		}
 	}
 	
-	public void doSomething() {
-		Random rand = new Random();
-		grid.setBlock(rand.nextInt(grid.getWidth()), rand.nextInt(grid.getHeight()), true);
-	}
-	
 	public void startGeneration() {
 		generate = true;
 	}
@@ -97,14 +92,12 @@ public class Generator implements Runnable, IPoissonDebug {
 	public void generateDiscs() {
 		if(generate) {
 			System.out.println("generateDiscs");
-			
-			grid.clear();
-			
+						
 			for(int cz = 0; cz < 8; cz++) {
 				for(int cx = 0; cx < 8; cx++) {
 					List<PoissonDisc> discs = getPoissonDiscs(cx, 0, cz);
 					for(PoissonDisc disc : discs) {
-						grid.drawDisc(disc);
+						grid.addDrawable(new GridDisc(disc));
 					}
 				}
 			}
@@ -115,130 +108,127 @@ public class Generator implements Runnable, IPoissonDebug {
 	
 	public void start() {
 		System.out.println("start");
-		running = true;
-		
-		new Thread(this).start();
+		if(!running) {
+			running = true;
+			current = new Thread(this);
+			current.start();
+		}
 	}
 	
 	public void stop() {
 		System.out.println("stop");
-		running = false;
-		// you might also want to interrupt() the Thread that is 
-		// running this Runnable, too, or perhaps call:
-		debugResume();
-		// to unblock
+		if(running) {
+			running = false;
+			debugResume();
+			if(current != null) {
+				try {
+					current.join();
+				}
+				catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				current = null;
+			}
+		}
 	}
 	
 	@Override
 	public void begin(int chunkX, int chunkZ) {
 		System.out.println("begin");
 		next();
-		// TODO Auto-generated method stub
 	}
 	
 	@Override
 	public void collectSolved(List<PoissonDisc> discs) {
 		System.out.println("collectSolved");
 		next();
-		// TODO Auto-generated method stub
 	}
 	
 	@Override
 	public void doEdgeMasking(List<PoissonDisc> discs) {
 		System.out.println("doEdgeMasking");
 		next();
-		// TODO Auto-generated method stub
 	}
 	
 	@Override
 	public void maskSolvedDiscs(List<PoissonDisc> discs) {
 		System.out.println("maskSolvedDiscs");
 		next();
-		// TODO Auto-generated method stub
 	}
 	
 	@Override
 	public void createRootDisc(List<PoissonDisc> discs, PoissonDisc rootDisc) {
 		System.out.println("createRootDisc");
+		GridDisc disc = new GridDisc(rootDisc);
+		grid.addDrawable(disc);
 		next();
-		// TODO Auto-generated method stub
+		grid.remDrawable(disc);
 	}
 	
 	@Override
 	public void gatherUnsolved(List<PoissonDisc> unsolvedDiscs, List<PoissonDisc> discs) {
 		System.out.println("gatherUnsolved");
 		next();
-		// TODO Auto-generated method stub
 	}
 	
 	@Override
 	public void updateCount(int count) {
 		System.out.println("updateCount");
 		next();
-		// TODO Auto-generated method stub
 	}
 	
 	@Override
 	public void pickMasterDisc(PoissonDisc master, List<PoissonDisc> unsolvedDiscs) {
 		System.out.println("pickMasterDisc");
 		next();
-		// TODO Auto-generated method stub
 	}
 	
 	@Override
 	public void getRadius(PoissonDisc master, int radius) {
 		System.out.println("getRadius");
 		next();
-		// TODO Auto-generated method stub
 	}
 	
 	@Override
 	public void findSecondDisc(PoissonDisc master, Vec2i slavePos) {
 		System.out.println("findSecondDisc");
 		next();
-		// TODO Auto-generated method stub
 	}
 	
 	@Override
 	public void maskMasterSlave(PoissonDisc master, PoissonDisc slave) {
 		System.out.println("maskMasterSlave");
 		next();
-		// TODO Auto-generated method stub
 	}
 	
 	@Override
 	public void intersectingList(PoissonDisc slave, Map<Integer, PoissonDisc> intersecting, List<PoissonDisc> discs) {
 		System.out.println("intersectingList");
 		next();
-		// TODO Auto-generated method stub
 	}
 	
 	@Override
 	public void findThirdDiscCandidate(PoissonDisc master1, PoissonDisc master2, PoissonDisc slave) {
 		System.out.println("findThirdDiscCandidate");
 		next();
-		// TODO Auto-generated method stub
 	}
 	
 	@Override
 	public void findThirdDiscSolved(PoissonDisc slave) {
 		System.out.println("findThirdDiscSolved");
 		next();
-		// TODO Auto-generated method stub
 	}
 	
 	@Override
 	public void solveDiscs(List<PoissonDisc> unsolvedDiscs, List<PoissonDisc> discs) {
 		System.out.println("solveDiscs");
 		next();
-		// TODO Auto-generated method stub
 	}
 	
 	@Override
 	public void gatherUnsolved2(List<PoissonDisc> unsolvedDiscs, List<PoissonDisc> discs) {
 		System.out.println("gatherUnsolved2");
 		next();
-		// TODO Auto-generated method stub
 	}
 	
 }

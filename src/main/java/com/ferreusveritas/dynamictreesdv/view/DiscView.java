@@ -26,13 +26,13 @@ public class DiscView implements Runnable {
 	private final AtomicBoolean running = new AtomicBoolean(false);
 	
 	public JFrame window;
-	public ViewerGrid grid;
+	public ViewerGrid gridView;
 	
 	private int targetTickMillis;
 	
 	public DiscView() {
 		window = new JFrame("Disc Viewer?");
-		grid = new ViewerGrid();
+		gridView = new ViewerGrid();
 		JPanel container = new JPanel();
 		JPanel menu = new JPanel();
 		JPanel gridPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
@@ -42,39 +42,39 @@ public class DiscView implements Runnable {
 		menu.setLayout(new BoxLayout(menu, BoxLayout.Y_AXIS));
 		container.add(menu, 0);
 		container.add(gridPanel, 1);
-		gridPanel.add(grid);
+		gridPanel.add(gridView);
 		menu.setAlignmentY(0.5F);
 		gridPanel.setAlignmentY(0.5F);
 		
 		JButton startButton = new JButton("Start Generator Thread");
 		startButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				grid.startThread();
+				gridView.startThread();
 			}
 		});
 		JButton stopButton = new JButton("Stop Generator Thread");
 		stopButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				grid.stopThread();
+				gridView.stopThread();
 			}
 		});
 		
 		JButton clearButton = new JButton("Clear");
 		clearButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				grid.clear();
+				gridView.clear();
 			}
 		});
 		JButton generateButton = new JButton("Generate");
 		generateButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				grid.generate();
+				gridView.generate();
 			}
 		});
 		JButton stepButton = new JButton("Step");
 		stepButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				grid.step();
+				gridView.step();
 			}
 		});
 		
@@ -97,7 +97,7 @@ public class DiscView implements Runnable {
 		TextField seedInput = new TextField("", 19);
 		seedInput.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				grid.setSeed(seedInput.getText());
+				gridView.setSeed(seedInput.getText());
 			}
 		});
 		seedPanel.add(seedInput);
@@ -138,11 +138,17 @@ public class DiscView implements Runnable {
 	public void run() {
 		running.set(true);
 		
+		//The the window manifest itself before we start drawing. btw, THIS SUCKS!
+		try { Thread.sleep(100); }
+		catch (InterruptedException e) { }
+		
 		int renderTickMillis = 1000 / 60;
 		
 		int prevTime = (int) System.currentTimeMillis();
 		int drawAccumulator = 0;
 		int tickAccumulator = 0;
+		
+		
 		
 		while (running.get()) {
 			int time = (int) System.currentTimeMillis();
@@ -151,22 +157,23 @@ public class DiscView implements Runnable {
 			tickAccumulator += delta;
 			drawAccumulator += delta;
 			
-			grid.doInput();
+			gridView.doInput();
 			
 			if (tickAccumulator >= targetTickMillis) {
 				tickAccumulator = Math.min(tickAccumulator - targetTickMillis, targetTickMillis);
-				grid.update();
+				gridView.update();
 			}
 			if (drawAccumulator >= renderTickMillis) {
 				drawAccumulator -= renderTickMillis;
-				grid.draw();
+				gridView.draw();
 			}
+			
 		}
 	}
 	
 	public void stop() {
 		running.set(false);
-		grid.stopThread();
+		gridView.stopThread();
 	}
 	
 }

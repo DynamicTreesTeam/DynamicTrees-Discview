@@ -1,12 +1,14 @@
 package com.ferreusveritas.dynamictreesdv.view;
 
-import com.ferreusveritas.dynamictrees.systems.poissondisc.PoissonDisc;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Grid {
 	
 	private final int width, height;
 	private final boolean[][] current;
-	public boolean changed = true;
+	private boolean changed = true;
+	public List<GridDrawable> drawables;
 
 	public Grid() {
 		this(128, 128);
@@ -16,6 +18,7 @@ public class Grid {
 		this.width = width;
 		this.height = height;
 		this.current = new boolean[height][width];
+		this.drawables = new ArrayList<>();
 	}
 	
 	public int getWidth() {
@@ -28,6 +31,10 @@ public class Grid {
 
 	public void clean() {
 		changed = false;
+	}
+	
+	public boolean isDirty() {
+		return changed;
 	}
 	
 	public void clear() {
@@ -59,16 +66,31 @@ public class Grid {
 		changed = true;
 	}
 	
-	public void drawDisc(PoissonDisc disc) {
-		int startX = disc.x - disc.radius;
-		int stopX = disc.x + disc.radius;
-		int startZ = disc.z - disc.radius;
-		int stopZ = disc.z + disc.radius;
-			
-		for(int z = startZ; z <= stopZ; z++) {
-			for(int x = startX; x <= stopX; x++) {
-				setBlockOr(x, z, disc.isEdge(x, z));
-			}
+	public void renderDrawables() {
+		synchronized (drawables) {
+			drawables.forEach(d -> d.draw(this));
 		}
 	}
+	
+	public void addDrawable(GridDrawable gd) {
+		synchronized (drawables) {
+			drawables.add(gd);
+		}
+		changed = true;
+	}
+	
+	public void remDrawable(GridDrawable gd) {
+		synchronized (drawables) {
+			 drawables.remove(gd);
+		}
+		changed = true;
+	}
+	
+	public void clearDrawables() {
+		synchronized (drawables) {
+			drawables.clear();
+		}
+		changed = true;
+	}
+	
 }
