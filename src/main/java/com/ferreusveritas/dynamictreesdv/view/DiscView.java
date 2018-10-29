@@ -138,7 +138,7 @@ public class DiscView implements Runnable {
 	public void run() {
 		running.set(true);
 		
-		//The the window manifest itself before we start drawing. btw, THIS SUCKS!
+		//Let the window manifest itself before we start drawing. btw, THIS SUCKS!
 		try { Thread.sleep(100); }
 		catch (InterruptedException e) { }
 		
@@ -147,7 +147,6 @@ public class DiscView implements Runnable {
 		int prevTime = (int) System.currentTimeMillis();
 		int drawAccumulator = 0;
 		int tickAccumulator = 0;
-		
 		
 		
 		while (running.get()) {

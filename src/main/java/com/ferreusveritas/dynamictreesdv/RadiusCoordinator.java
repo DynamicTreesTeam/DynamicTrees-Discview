@@ -15,7 +15,7 @@ public class RadiusCoordinator implements IRadiusCoordinator {
 	@Override
 	public int getRadiusAtCoords(double x, double z) {
 		return 5;
-		//return random.nextInt(4) + 4;
+		//return random.nextInt(2) + 7;
 	}
 	
 }

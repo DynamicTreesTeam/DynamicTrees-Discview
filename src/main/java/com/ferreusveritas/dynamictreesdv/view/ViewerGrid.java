@@ -82,7 +82,8 @@ public class ViewerGrid extends JPanel {
 			Graphics2D g = (Graphics2D) getGraphics();
 			for (int y = 0; y < grid.getHeight(); y++) {
 				for (int x = 0; x < grid.getWidth(); x++) {
-					canvas.setRGB(x, y, grid.getBlock(x, y) ? 0xFF000000 : bgColor(x, y));
+					int color = grid.getBlock(x, y);
+					canvas.setRGB(x, y, color != 0 ? color : bgColor(x, y));
 				}
 			}
 			
@@ -101,7 +102,7 @@ public class ViewerGrid extends JPanel {
 				int mouseX = (int) (pos.getX() / tileWidth);
 				int mouseY = (int) (pos.getY() / tileHeight);
 				if ((mouseY < grid.getHeight()) && (mouseX < grid.getWidth())) {
-					grid.setBlock(mouseX, mouseY, newState);
+					grid.setBlock(mouseX, mouseY, newState ? 0xFF0000FF : 0);
 				}
 			}
 		}

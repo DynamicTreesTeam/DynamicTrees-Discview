@@ -6,7 +6,7 @@ import java.util.List;
 public class Grid {
 	
 	private final int width, height;
-	private final boolean[][] current;
+	private final int[][] current;
 	private boolean changed = true;
 	public List<GridDrawable> drawables;
 
@@ -17,7 +17,7 @@ public class Grid {
 	public Grid(int width, int height) {
 		this.width = width;
 		this.height = height;
-		this.current = new boolean[height][width];
+		this.current = new int[height][width];
 		this.drawables = new ArrayList<>();
 	}
 	
@@ -40,28 +40,30 @@ public class Grid {
 	public void clear() {
 		for (int y = 0; y < getHeight(); y++) {
 			for (int x = 0; x < getWidth(); x++) {
-				setBlock(x, y, false);
+				setBlock(x, y, 0);
 			}
 		}
 	}
 	
-	public boolean getBlock(int x, int z) {
+	public int getBlock(int x, int z) {
 		if(x >= 0 && z >= 0 && x < getWidth() && z < getHeight()) {
 			return current[z][x];
 		}
-		return false;
+		return 0;
 	}
 	
-	public void setBlock(int x, int z, boolean block) {
+	public void setBlock(int x, int z, int block) {
 		if(x >= 0 && z >= 0 && x < getWidth() && z < getHeight()) {
 			current[z][x] = block;
 		}
 		changed = true;
 	}
 	
-	public void setBlockOr(int x, int z, boolean block) {
+	public void setBlockOr(int x, int z, int block) {
 		if(x >= 0 && z >= 0 && x < getWidth() && z < getHeight()) {
-			current[z][x] |= block;
+			if(block != 0) {
+				current[z][x] = block;
+			}
 		}
 		changed = true;
 	}
@@ -79,11 +81,19 @@ public class Grid {
 		changed = true;
 	}
 	
+	public void addDrawables(List<GridDrawable> drawables) {
+		drawables.forEach(d -> addDrawable(d));
+	}
+	
 	public void remDrawable(GridDrawable gd) {
 		synchronized (drawables) {
 			 drawables.remove(gd);
 		}
 		changed = true;
+	}
+
+	public void remDrawables(List<GridDrawable> drawables) {
+		drawables.forEach(d -> remDrawable(d));
 	}
 	
 	public void clearDrawables() {

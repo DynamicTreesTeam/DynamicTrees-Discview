@@ -5,9 +5,11 @@ import com.ferreusveritas.dynamictrees.systems.poissondisc.PoissonDisc;
 public class GridDisc extends GridDrawable {
 	
 	PoissonDisc disc;
+	int color;
 	
-	public GridDisc(PoissonDisc disc) {
+	public GridDisc(PoissonDisc disc, int color) {
 		this.disc = disc;
+		this.color = color;
 	}
 	
 	@Override
@@ -19,7 +21,9 @@ public class GridDisc extends GridDrawable {
 			
 		for(int z = startZ; z <= stopZ; z++) {
 			for(int x = startX; x <= stopX; x++) {
-				grid.setBlockOr(x, z, disc.isEdge(x, z));
+				if(disc.isEdge(x, z) || ( disc.real && disc.isInside(x, z) ) ) {
+					grid.setBlockOr(x, z, color);
+				}
 			}
 		}
 	}
