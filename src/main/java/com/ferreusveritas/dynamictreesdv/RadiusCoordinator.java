@@ -8,7 +8,7 @@ public class RadiusCoordinator implements IRadiusCoordinator {
 	
 	private final Random random;
 	
-	public int packing = 0;
+	public int pass = 0;
 	
 	public RadiusCoordinator(Random random) {
 		this.random = random;
@@ -16,7 +16,7 @@ public class RadiusCoordinator implements IRadiusCoordinator {
 	
 	@Override
 	public int getRadiusAtCoords(int x, int z) {
-		switch(packing) {
+		switch(pass) {
 			default:
 			case 0: return random.nextInt(7) + 2;
 			case 1: return 3;
@@ -25,9 +25,9 @@ public class RadiusCoordinator implements IRadiusCoordinator {
 	}
 	
 	@Override
-	public boolean setPacking(int chunkX, int chunkZ, int iteration) {
-		this.packing = iteration;
-		return packing < 3;
+	public boolean runPass(int chunkX, int chunkZ, int pass) {
+		this.pass = pass;
+		return pass < 3;
 	}
 	
 }
